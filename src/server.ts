@@ -26,6 +26,7 @@ monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
       return;
     }
     if (name === "main") {
+      await rcon.send("forceload add -217 -89");
       if (status === Status.UP) {
         await rcon.send("fill -218 68 -96 -216 63 -96 air");
         await rcon.send("fill -218 68 -96 -216 68 -96 stone_bricks");
@@ -43,7 +44,9 @@ monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
         );
         await rcon.send("setblock -217 68 -96 water");
       }
+      await rcon.send("forceload remove all");
     } else if (name === "hololive_01") {
+      await rcon.send("forceload add -217 -89");
       if (status === Status.UP) {
         await rcon.send("fill -216 67 -82 -218 63 -82 air");
         await rcon.send("fill -216 68 -82 -218 68 -82 stone_bricks");
@@ -61,6 +64,7 @@ monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
         );
         await rcon.send("setblock -217 68 -82 water");
       }
+      await rcon.send("forceload remove all");
     }
   };
   run().catch(console.error);
