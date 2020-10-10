@@ -14,69 +14,72 @@ const monitor = new Monitor({
   interval: 10000,
 });
 
-const rcon = new Rcon(
+class RconClient {
+  private readonly conn: Rcon;
+
+  constructor(host: string, port: number, password: string) {
+    this.conn = new Rcon(host, port, password, { tcp: true, challenge: false });
+    this.conn.on("auth", () => {
+      this.onAuth?.();
+    });
+    this.conn.connect();
+  }
+
+  onAuth?: () => void;
+
+  async send(command: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const cleanup = () => {
+        this.conn.removeListener("response", onResponse);
+        this.conn.removeListener("end", onEnd);
+      };
+      const onResponse = (res: string) => {
+        console.log(`[rcon] response: ${res}`);
+        resolve();
+        cleanup();
+      };
+      const onEnd = () => {
+        reject();
+        cleanup();
+      };
+      this.conn.addListener("response", onResponse);
+      this.conn.addListener("end", onEnd);
+      this.conn.send(command);
+    });
+  }
+}
+
+const rcon = new RconClient(
   settings.lobby.address,
   settings.lobby.rconPort,
-  settings.lobby.rconPassword,
-  { tcp: true, challenge: false }
+  settings.lobby.rconPassword
 );
-rcon.on("auth", () => {
-  console.log(`[rcon] auth`);
-  monitor.start();
-});
-rcon.on("response", (res) => {
-  console.log(`[rcon] response: ${res}`);
-});
-rcon.on("end", () => {
-  console.log(`[rcon] end`);
-});
-rcon.connect();
 
-setInterval(() => {
-  const current = monitor.current;
-  for (const { server, status } of current) {
-    if (status === Status.UNKNOWN) {
-      continue;
-    }
-    if (server === "main") {
-      if (status === Status.UP) {
-        rcon.send("fill -218 68 -96 -216 63 -96 air");
-        rcon.send("fill -218 68 -96 -216 68 -96 stone_bricks");
-        rcon.send("fill -218 63 -96 -216 63 -96 stone_bricks");
-        rcon.send("fill -218 67 -96 -216 64 -96 nether_portal");
-        rcon.send("fill -218 66 -95 -216 65 -95 air");
-      } else {
-        rcon.send("fill -218 66 -95 -216 65 -95 barrier");
-        rcon.send("fill -218 68 -96 -216 63 -96 air");
-        rcon.send(
-          "setblock -218 68 -96 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
-        );
-        rcon.send(
-          "setblock -216 68 -96 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
-        );
-        rcon.send("setblock -217 68 -96 water");
-      }
-    } else if (server === "hololive_01") {
-      if (status === Status.UP) {
-        rcon.send("fill -216 67 -82 -218 63 -82 air");
-        rcon.send("fill -216 68 -82 -218 68 -82 stone_bricks");
-        rcon.send("fill -216 63 -82 -218 63 -82 stone_bricks");
-        rcon.send("fill -216 67 -82 -218 64 -82 nether_portal");
-        rcon.send("fill -216 66 -83 -218 65 -83 air");
-      } else {
-        rcon.send("fill -216 66 -83 -218 65 -83 barrier");
-        rcon.send("fill -216 67 -82 -218 63 -82 air");
-        rcon.send(
-          "setblock -216 68 -82 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
-        );
-        rcon.send(
-          "setblock -218 68 -82 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
-        );
-        rcon.send("setblock -217 68 -82 water");
-      }
-    }
+monitor.onStatusChanged = async (
+  name: string,
+  status: Status,
+  prev: Status
+) => {
+  let range: string;
+  if (name === "main") {
+    range = "-218 67 -96 -216 64 -96";
+  } else if (name === "hololive_01") {
+    range = "-216 67 -82 -218 64 -82";
+  } else {
+    return;
   }
-}, 10000);
+  if (status === Status.UNKNOWN) {
+    return;
+  }
+  let block: string;
+  if (status === Status.UP) {
+    block = "minecraft:nether_portal";
+  } else {
+    block = "minecraft:barrier";
+  }
+  const command = `fill ${range} ${block}`;
+  await rcon.send(command);
+};
 
 const port = 8091;
 const app = express();
