@@ -9,7 +9,11 @@ const settings: Settings = JSON.parse(
   fs.readFileSync(path.join(__dirname, "..", "settings.json")).toString("utf-8")
 );
 
-console.log(Rcon);
+const monitor = new Monitor({
+  servers: [{ name: "lobby", ...settings.lobby }, ...settings.servers],
+  interval: 10000,
+});
+
 const rcon = new Rcon(
   settings.lobby.address,
   settings.lobby.rconPort,
@@ -18,6 +22,7 @@ const rcon = new Rcon(
 );
 rcon.on("auth", () => {
   console.log(`[rcon] auth`);
+  monitor.start();
 });
 rcon.on("response", (res) => {
   console.log(`[rcon] response: ${res}`);
@@ -25,12 +30,8 @@ rcon.on("response", (res) => {
 rcon.on("end", () => {
   console.log(`[rcon] end`);
 });
+rcon.connect();
 
-const monitor = new Monitor({
-  servers: [{ name: "lobby", ...settings.lobby }, ...settings.servers],
-  interval: 10000,
-});
-monitor.start();
 monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
   let range: string;
   if (name === "main") {
