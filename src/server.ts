@@ -26,7 +26,9 @@ class RconClient {
 
   onAuth?: () => void;
 
-  async send(command: string): Promise<void> {
+  send(command: string): Promise<void> {
+    const msPerTick = 1000 / 20;
+    const weight = 1 * msPerTick;
     return new Promise((resolve, reject) => {
       const cleanup = () => {
         this.conn.removeListener("response", onResponse);
@@ -35,11 +37,11 @@ class RconClient {
       const onResponse = (res: string) => {
         console.log(`[rcon] response for command "${command}": ${res}`);
         cleanup();
-        resolve();
+        setTimeout(resolve, weight);
       };
       const onEnd = () => {
         cleanup();
-        reject();
+        setTimeout(reject, weight);
       };
       this.conn.addListener("response", onResponse);
       this.conn.addListener("end", onEnd);
