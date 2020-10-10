@@ -26,8 +26,6 @@ export class Monitor {
     this.timer && clearInterval(this.timer);
   }
 
-  onStatusChanged?: (name: string, status: Status, prev: Status) => void;
-
   get current(): ServerStatus[] {
     return [...this._current];
   }
@@ -40,7 +38,6 @@ export class Monitor {
     const prev = this._current[idx].status;
     if (prev !== status) {
       this._current[idx].status = status;
-      this.onStatusChanged?.(name, status, prev);
     }
   }
 

@@ -32,27 +32,51 @@ rcon.on("end", () => {
 });
 rcon.connect();
 
-monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
-  let range: string;
-  if (name === "main") {
-    range = "-218 67 -96 -216 64 -96";
-  } else if (name === "hololive_01") {
-    range = "-216 67 -82 -218 64 -82";
-  } else {
-    return;
+setInterval(() => {
+  const current = monitor.current;
+  for (const { server, status } of current) {
+    if (status === Status.UNKNOWN) {
+      continue;
+    }
+    if (server === "main") {
+      if (status === Status.UP) {
+        rcon.send("fill -218 68 -96 -216 63 -96 air");
+        rcon.send("fill -218 68 -96 -216 68 -96 stone_bricks");
+        rcon.send("fill -218 63 -96 -216 63 -96 stone_bricks");
+        rcon.send("fill -218 67 -96 -216 64 -96 nether_portal");
+        rcon.send("fill -218 66 -95 -216 65 -95 air");
+      } else {
+        rcon.send("fill -218 66 -95 -216 65 -95 barrier");
+        rcon.send("fill -218 68 -96 -216 63 -96 air");
+        rcon.send(
+          "setblock -218 68 -96 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
+        );
+        rcon.send(
+          "setblock -216 68 -96 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
+        );
+        rcon.send("setblock -217 68 -96 water");
+      }
+    } else if (server === "hololive_01") {
+      if (status === Status.UP) {
+        rcon.send("fill -216 67 -82 -218 63 -82 air");
+        rcon.send("fill -216 68 -82 -218 68 -82 stone_bricks");
+        rcon.send("fill -216 63 -82 -218 63 -82 stone_bricks");
+        rcon.send("fill -216 67 -82 -218 64 -82 nether_portal");
+        rcon.send("fill -216 66 -83 -218 65 -83 air");
+      } else {
+        rcon.send("fill -216 66 -83 -218 65 -83 barrier");
+        rcon.send("fill -216 67 -82 -218 63 -82 air");
+        rcon.send(
+          "setblock -216 68 -82 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
+        );
+        rcon.send(
+          "setblock -218 68 -82 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
+        );
+        rcon.send("setblock -217 68 -82 water");
+      }
+    }
   }
-  if (status === Status.UNKNOWN) {
-    return;
-  }
-  let block: string;
-  if (status === Status.UP) {
-    block = "minecraft:nether_portal";
-  } else {
-    block = "minecraft:barrier";
-  }
-  const command = `/fill ${range} ${block}`;
-  rcon.send(command);
-};
+}, 10000);
 
 const port = 8091;
 const app = express();
