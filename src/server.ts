@@ -63,25 +63,46 @@ monitor.onStatusChanged = async (
   status: Status,
   prev: Status
 ) => {
-  let range: string;
-  if (name === "main") {
-    range = "-218 67 -96 -216 64 -96";
-  } else if (name === "hololive_01") {
-    range = "-216 67 -82 -218 64 -82";
-  } else {
-    return;
-  }
   if (status === Status.UNKNOWN) {
     return;
   }
-  let block: string;
-  if (status === Status.UP) {
-    block = "minecraft:nether_portal";
-  } else {
-    block = "minecraft:barrier";
+  if (name === "main") {
+    if (status === Status.UP) {
+      await rcon.send("fill -218 68 -96 -216 63 -96 air");
+      await rcon.send("fill -218 68 -96 -216 68 -96 stone_bricks");
+      await rcon.send("fill -218 63 -96 -216 63 -96 stone_bricks");
+      await rcon.send("fill -218 67 -96 -216 64 -96 nether_portal");
+      await rcon.send("fill -218 66 -95 -216 65 -95 air");
+    } else {
+      await rcon.send("fill -218 66 -95 -216 65 -95 barrier");
+      await rcon.send("fill -218 68 -96 -216 63 -96 air");
+      await rcon.send(
+        "setblock -218 68 -96 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
+      );
+      await rcon.send(
+        "setblock -216 68 -96 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
+      );
+      await rcon.send("setblock -217 68 -96 water");
+    }
+  } else if (name === "hololive_01") {
+    if (status === Status.UP) {
+      await rcon.send("fill -216 67 -82 -218 63 -82 air");
+      await rcon.send("fill -216 68 -82 -218 68 -82 stone_bricks");
+      await rcon.send("fill -216 63 -82 -218 63 -82 stone_bricks");
+      await rcon.send("fill -216 67 -82 -218 64 -82 nether_portal");
+      await rcon.send("fill -216 66 -83 -218 65 -83 air");
+    } else {
+      await rcon.send("fill -216 66 -83 -218 65 -83 barrier");
+      await rcon.send("fill -216 67 -82 -218 63 -82 air");
+      await rcon.send(
+        "setblock -216 68 -82 stone_brick_stairs[waterlogged=true,facing=east,half=top]"
+      );
+      await rcon.send(
+        "setblock -218 68 -82 stone_brick_stairs[waterlogged=true,facing=west,half=top]"
+      );
+      await rcon.send("setblock -217 68 -82 water");
+    }
   }
-  const command = `fill ${range} ${block}`;
-  await rcon.send(command);
 };
 
 rcon.onAuth = () => {
