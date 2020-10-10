@@ -22,7 +22,6 @@ class RconClient {
     this.conn.on("auth", () => {
       this.onAuth?.();
     });
-    this.conn.connect();
   }
 
   onAuth?: () => void;
@@ -46,6 +45,10 @@ class RconClient {
       this.conn.addListener("end", onEnd);
       this.conn.send(command);
     });
+  }
+
+  connect() {
+    this.conn.connect();
   }
 }
 
@@ -80,6 +83,12 @@ monitor.onStatusChanged = async (
   const command = `fill ${range} ${block}`;
   await rcon.send(command);
 };
+
+rcon.onAuth = () => {
+  monitor.start();
+};
+
+rcon.connect();
 
 const port = 8091;
 const app = express();
