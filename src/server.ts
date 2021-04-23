@@ -45,7 +45,7 @@ monitor.onStatusChanged = (name: string, status: Status, prev: Status) => {
         await rcon.send("setblock -217 68 -96 water");
       }
       await rcon.send("forceload remove all");
-    } else if (name === "hololive_01") {
+    } else if (name === "hololive") {
       await rcon.send("forceload add -217 -89");
       if (status === Status.UP) {
         await rcon.send("fill -216 67 -82 -218 63 -82 air");
